@@ -1,0 +1,13 @@
+
+.DS_Store
+Thumbs.db
+
+*.swp
+*.swo
+*.swn
+*.bak
+*.tmp
+*.undo
+
+*.o
+*.out

@@ -1,4 +1,8 @@
 return {
+    {
+        "nvim-lua/plenary.nvim",
+        name = "plenary",
+    },
 	{
 		"EdenEast/nightfox.nvim",
 		name = "nightfox",

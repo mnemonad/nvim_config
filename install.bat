@@ -1,4 +1,15 @@
 @echo off
+setlocal enabledelayedexpansion
+
+REM Check if running as Administrator
+net session >nul 2>&1
+if not %errorLevel% == 0 (
+    echo This script requires Administrator privileges for creating symbolic links.
+    echo Please right-click and "Run as administrator" or enable Developer Mode.
+    pause
+    exit /b 1
+)
+
 REM Check if winget is available
 where winget >nul 2>&1
 if errorlevel 1 (
@@ -21,12 +32,25 @@ REM Define source and target directories
 set "SRC=%cd%\config_src"
 set "TARGET=%USERPROFILE%\.config\nvim"
 
-REM Backup existing Neovim config if it exists (rename the directory)
+REM Check if source directory exists
+if not exist "%SRC%" (
+    echo Error: Source directory %SRC% does not exist.
+    pause
+    exit /b 1
+)
+
+REM Backup existing Neovim config if it exists
 if exist "%TARGET%" (
     for /f "tokens=2 delims==" %%i in ('wmic os get localdatetime /value ^| find "="') do set "dt=%%i"
-    set "backup=%TARGET%.bak.%dt%"
-    echo Backing up %TARGET% to %backup%
-    ren "%TARGET%" "%backup%"
+    set "dt=!dt:~0,14!"
+    set "backup=%TARGET%.bak.!dt!"
+    echo Backing up %TARGET% to !backup!
+    ren "%TARGET%" "!backup!"
+    if errorlevel 1 (
+        echo Failed to backup existing config.
+        pause
+        exit /b 1
+    )
 )
 
 REM Create the parent directory if it doesn't exist
@@ -35,11 +59,11 @@ if not exist "%USERPROFILE%\.config" mkdir "%USERPROFILE%\.config"
 REM Create a directory symbolic link for the nvim config
 mklink /D "%TARGET%" "%SRC%"
 if errorlevel 1 (
-    echo Failed to create symbolic link. Run this script as Administrator or enable Developer Mode.
+    echo Failed to create symbolic link. Make sure you're running as Administrator.
     pause
     exit /b 1
 )
 
 echo Neovim config setup complete.
+echo Please restart your terminal to ensure all changes take effect.
 pause
-

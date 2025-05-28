@@ -35,25 +35,25 @@ A batteries-included, cross-platform Neovim configuration that transforms any ma
 
 **Linux/WSL:**
 ```bash
-git clone https://github.com/yourusername/neovim-portable-ide.git && cd neovim-portable-ide && chmod +x install.sh && ./install.sh
+git clone https://github.com/mnemonad/nvim_config.git && cd nvim_config && chmod +x install.sh && ./install.sh
 ```
 
 **macOS:**
 ```bash
-git clone https://github.com/yourusername/neovim-portable-ide.git && cd neovim-portable-ide && chmod +x install.zsh && ./install.zsh
+git clone https://github.com/mnemonad/nvim_config.git && cd nvim_config && chmod +x install.zsh && ./install.zsh
 ```
 
 **Windows (PowerShell as Administrator):**
 ```powershell
-git clone https://github.com/yourusername/neovim-portable-ide.git; cd neovim-portable-ide; .\install.bat
+git clone https://github.com/mnemonad/nvim_config.git; cd nvim_config; .\install.bat
 ```
 
 ### Manual Installation
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/neovim-portable-ide.git
-   cd neovim-portable-ide
+   git clone https://github.com/mnemonad/nvim_config.git
+   cd nvim_config
    ```
 
 2. **Run the appropriate installer:**
@@ -96,7 +96,7 @@ git clone https://github.com/yourusername/neovim-portable-ide.git; cd neovim-por
 ## 📁 Project Structure
 
 ```
-neovim-portable-ide/
+nvim_config/
 ├── config_src/                 # Neovim configuration
 │   ├── init.lua                # Entry point
 │   ├── lua/
@@ -218,15 +218,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
+**Special Thanks to [ThePrimeagen](https://github.com/ThePrimeagen)** 🎯
+
+This configuration is heavily inspired by and based on ThePrimeagen's Neovim setup. His educational content, live coding streams, and opinionated vim workflows have been instrumental in shaping this portable IDE. If you enjoy this config, definitely check out:
+- [ThePrimeagen's YouTube Channel](https://www.youtube.com/c/ThePrimeagen)
+- [His Neovim configuration tutorials](https://github.com/ThePrimeagen/.dotfiles)
+- The legendary vim motions and productivity tips
+
+### Other Amazing Projects:
 - [Neovim](https://neovim.io/) - The hyperextensible Vim-based text editor
 - [Lazy.nvim](https://github.com/folke/lazy.nvim) - Modern plugin manager
 - [Mason.nvim](https://github.com/williamboman/mason.nvim) - LSP installer
 - [Telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) - Fuzzy finder
-- [ThePrimeagen](https://github.com/ThePrimeagen) - For Harpoon and inspiration
+- [Harpoon](https://github.com/ThePrimeagen/harpoon) - ThePrimeagen's file navigation masterpiece
 
-## 🌟 Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/neovim-portable-ide&type=Date)](https://star-history.com/#yourusername/neovim-portable-ide&Date)
 
 ---
 

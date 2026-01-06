@@ -11,11 +11,12 @@ return {
     config = function()
         local cmp = require("cmp")
         local cmp_lsp = require("cmp_nvim_lsp")
-        local capabilites = vim.tbl_deep_extend(
-        "force",
-        {},
-        vim.lsp.protocol.make_client_capabilities(),
-        cmp_lsp.default_capabilities()
+        -- Fixed: Changed 'capabilites' to 'capabilities'
+        local capabilities = vim.tbl_deep_extend(
+            "force",
+            {},
+            vim.lsp.protocol.make_client_capabilities(),
+            cmp_lsp.default_capabilities()
         )
 
         cmp.setup({

@@ -171,50 +171,58 @@ setup_nvim_config() {
 
 setup_zsh_config() {
     log_info "Setting up Zsh configuration..."
-    
-    touch "$HOME/.zshrc"
-    
-    ALIAS_SECTION="# Neovim IDE aliases"
-    ALIASES=(
-        "alias vim='nvim'"
-        "alias vi='nvim'"
-        "alias oldvim='$(which vim 2>/dev/null || echo /usr/bin/vim)'"
-    )
-    
-    if ! grep -q "$ALIAS_SECTION" "$HOME/.zshrc"; then
-        echo "" >> "$HOME/.zshrc"
-        echo "$ALIAS_SECTION" >> "$HOME/.zshrc"
-        
-        for alias_cmd in "${ALIASES[@]}"; do
-            echo "$alias_cmd" >> "$HOME/.zshrc"
-        done
-        
-        log_success "Added Neovim aliases to .zshrc"
+
+    ZSH_SRC="$(pwd)/zsh_src"
+
+    # Install Oh My Zsh if not present
+    if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+        log_info "Installing Oh My Zsh..."
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    fi
+
+    # If we have portable zsh config, use it
+    if [[ -d "$ZSH_SRC" ]]; then
+        log_info "Found portable zsh config, linking..."
+
+        # Backup and link .zshrc
+        ZSHRC_TARGET="$HOME/.zshrc"
+        if [[ -e "$ZSHRC_TARGET" && ! -L "$ZSHRC_TARGET" ]]; then
+            BACKUP="${ZSHRC_TARGET}.bak.$(date +%Y%m%d%H%M%S)"
+            log_info "Backing up existing .zshrc to $BACKUP"
+            mv "$ZSHRC_TARGET" "$BACKUP"
+        elif [[ -L "$ZSHRC_TARGET" ]]; then
+            rm "$ZSHRC_TARGET"
+        fi
+        ln -sf "$ZSH_SRC/.zshrc" "$ZSHRC_TARGET"
+
+        # Copy custom theme
+        THEME_DIR="$HOME/.oh-my-zsh/custom/themes"
+        mkdir -p "$THEME_DIR"
+        cp "$ZSH_SRC/portable-dev.zsh-theme" "$THEME_DIR/"
+
+        log_success "Portable zsh configuration linked"
     else
-        log_info "Neovim aliases already configured"
+        # Fallback to appending config
+        log_info "No portable zsh config found, adding aliases..."
+
+        touch "$HOME/.zshrc"
+
+        ALIAS_SECTION="# Neovim IDE aliases"
+        if ! grep -q "$ALIAS_SECTION" "$HOME/.zshrc"; then
+            echo "" >> "$HOME/.zshrc"
+            echo "$ALIAS_SECTION" >> "$HOME/.zshrc"
+            echo "alias vim='nvim'" >> "$HOME/.zshrc"
+            echo "alias vi='nvim'" >> "$HOME/.zshrc"
+            echo "export EDITOR='nvim'" >> "$HOME/.zshrc"
+            log_success "Added Neovim aliases to .zshrc"
+        fi
     fi
-    
-    ENV_SECTION="# Neovim IDE environment"
-    ENV_VARS=(
-        "export EDITOR='nvim'"
-        "export VISUAL='nvim'"
-    )
-    
-    if ! grep -q "$ENV_SECTION" "$HOME/.zshrc"; then
-        echo "" >> "$HOME/.zshrc"
-        echo "$ENV_SECTION" >> "$HOME/.zshrc"
-        
-        for env_var in "${ENV_VARS[@]}"; do
-            echo "$env_var" >> "$HOME/.zshrc"
-        done
-        
-        log_success "Added environment variables to .zshrc"
-    fi
-    
+
+    # Set up FZF integration
     if command -v fzf >/dev/null 2>&1; then
         if [[ ! -f "$HOME/.fzf.zsh" ]]; then
             log_info "Setting up FZF integration..."
-            $(brew --prefix)/opt/fzf/install --key-bindings --completion --update-rc
+            $(brew --prefix)/opt/fzf/install --key-bindings --completion --update-rc --no-bash
         fi
     fi
 }

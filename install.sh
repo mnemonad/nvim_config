@@ -48,7 +48,7 @@ install_packages() {
         ubuntu|debian)
             $SUDO apt-get update
             
-            PACKAGES="git curl wget build-essential software-properties-common"
+            PACKAGES="git curl wget build-essential software-properties-common tree zsh"
             
             if [[ "$OS" == "debian" && "$VER" == "12" ]] || [[ "$CODENAME" == "bookworm" ]]; then
                 log_info "Detected Debian 12 (Bookworm)"
@@ -67,14 +67,14 @@ install_packages() {
             
         fedora)
             $SUDO dnf update -y
-            $SUDO dnf install -y git curl wget gcc gcc-c++ make lua lua-devel luarocks neovim
+            $SUDO dnf install -y git curl wget gcc gcc-c++ make lua lua-devel luarocks neovim tree zsh
             ;;
             
         centos|rhel)
             if [[ "$VER" -ge 8 ]]; then
                 $SUDO dnf update -y
                 $SUDO dnf install -y epel-release
-                $SUDO dnf install -y git curl wget gcc gcc-c++ make lua lua-devel
+                $SUDO dnf install -y git curl wget gcc gcc-c++ make lua lua-devel tree zsh
 
                 install_luarocks_from_source
                 install_neovim_appimage
@@ -86,7 +86,7 @@ install_packages() {
             
         arch|manjaro)
             $SUDO pacman -Syu --noconfirm
-            $SUDO pacman -S --noconfirm git curl wget base-devel lua luarocks neovim
+            $SUDO pacman -S --noconfirm git curl wget base-devel lua luarocks neovim tree zsh
             ;;
             
         *)
@@ -274,6 +274,41 @@ install_ripgrep_manual() {
     cd ~
 }
 
+setup_zsh_config() {
+    log_info "Setting up Zsh configuration..."
+
+    ZSH_SRC="$(pwd)/zsh_src"
+
+    if [[ ! -d "$ZSH_SRC" ]]; then
+        log_warning "Zsh config directory not found, skipping..."
+        return
+    fi
+
+    # Install Oh My Zsh if not present
+    if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+        log_info "Installing Oh My Zsh..."
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    fi
+
+    # Backup and link .zshrc
+    ZSHRC_TARGET="$HOME/.zshrc"
+    if [[ -e "$ZSHRC_TARGET" && ! -L "$ZSHRC_TARGET" ]]; then
+        BACKUP="${ZSHRC_TARGET}.bak.$(date +%Y%m%d%H%M%S)"
+        log_info "Backing up existing .zshrc to $BACKUP"
+        mv "$ZSHRC_TARGET" "$BACKUP"
+    elif [[ -L "$ZSHRC_TARGET" ]]; then
+        rm "$ZSHRC_TARGET"
+    fi
+    ln -sf "$ZSH_SRC/.zshrc" "$ZSHRC_TARGET"
+
+    # Copy custom theme
+    THEME_DIR="$HOME/.oh-my-zsh/custom/themes"
+    mkdir -p "$THEME_DIR"
+    cp "$ZSH_SRC/portable-dev.zsh-theme" "$THEME_DIR/"
+
+    log_success "Zsh configuration linked successfully"
+}
+
 health_check() {
     log_info "Running health check..."
     
@@ -323,6 +358,7 @@ main() {
     check_sudo
     install_packages
     setup_nvim_config
+    setup_zsh_config
     setup_aliases
     install_additional_tools
     health_check

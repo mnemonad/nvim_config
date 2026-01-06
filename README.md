@@ -17,6 +17,13 @@ A batteries-included, cross-platform Neovim configuration that transforms any ma
 - **Project Navigation** - Quick file switching with Harpoon
 - **Syntax Highlighting** - Tree-sitter powered syntax highlighting
 - **Undo History** - Visual undo tree for complex editing sessions
+- **AI Integration** - Claude-powered code assistance with CodeCompanion
+- **Keybind Discovery** - Which-key shows available shortcuts as you type
+
+### 🐚 Shell Configuration
+- **Oh My Zsh** - Pre-configured with a custom theme
+- **Smart Prompt** - Shows conda env, user@host, path, and git branch
+- **Filtered Tree** - Tree alias that hides common noise (`node_modules`, `__pycache__`, etc.)
 
 ### 🌐 Cross-Platform Support
 - **Linux** - Ubuntu, Debian (including Bookworm), Fedora, CentOS/RHEL 8+, Arch/Manjaro
@@ -92,6 +99,12 @@ git clone https://github.com/mnemonad/nvim_config.git; cd nvim_config; .\install
 | `<Leader>f` | Format code | Normal |
 | `<Leader>y` | Copy to system clipboard | Normal/Visual |
 | `J/K` | Move lines up/down | Visual |
+| `<Leader>?` | Show buffer keymaps | Normal |
+| `<Leader>ac` | Toggle AI chat | Normal |
+| `<Leader>aa` | AI actions menu | Normal/Visual |
+| `<Leader>ae` | AI inline edit | Visual |
+| `<Leader>st` | Search TODOs | Normal |
+| `]t / [t` | Next/prev TODO comment | Normal |
 
 ## 📁 Project Structure
 
@@ -105,17 +118,23 @@ nvim_config/
 │   │   │   ├── remap.lua       # Key bindings
 │   │   │   └── set.lua         # Vim settings
 │   │   └── plugins/            # Plugin configurations
+│   │       ├── codecompanion.lua # AI chat integration
 │   │       ├── fugitive.lua    # Git integration
 │   │       ├── harpoon.lua     # File navigation
+│   │       ├── indent.lua      # Indent guides & detection
 │   │       ├── lsp.lua         # Language server
 │   │       ├── telescope.lua   # Fuzzy finder
+│   │       ├── todo-comments.lua # TODO highlighting
 │   │       ├── treesitter.lua  # Syntax highlighting
-│   │       └── undotree.lua    # Undo history
+│   │       ├── undotree.lua    # Undo history
+│   │       └── which-key.lua   # Keybind hints
 │   └── lazy-lock.json          # Plugin version lock
+├── zsh_src/                    # Zsh configuration
+│   ├── .zshrc                  # Shell config (symlinked)
+│   └── portable-dev.zsh-theme  # Custom prompt theme
 ├── install.sh                  # Linux installer
 ├── install.zsh                 # macOS installer
 ├── install.bat                 # Windows installer
-├── .gitignore                  # Git ignore rules
 └── README.md                   # This file
 ```
 
@@ -154,10 +173,27 @@ Edit the `ensure_installed` table in `config_src/lua/plugins/lsp.lua`:
 ```lua
 ensure_installed = {
     "lua_ls",
-    "rust_analyzer", 
+    "rust_analyzer",
     "pyright",
     "your_language_server",
 },
+```
+
+### Configuring AI Integration
+
+CodeCompanion requires an Anthropic API key. Add to your shell config:
+```bash
+export ANTHROPIC_API_KEY="your-api-key-here"
+```
+
+Get an API key at [console.anthropic.com](https://console.anthropic.com). The free tier includes starter credits.
+
+### Customizing the Shell Prompt
+
+Edit `zsh_src/portable-dev.zsh-theme` to modify the prompt format:
+```zsh
+# Current format: (conda_env) user@host:path (git_branch)
+PROMPT='$(conda_prompt_info)%{$fg[cyan]%}%n@%m%{$reset_color%}:...'
 ```
 
 ## 🐛 Troubleshooting
@@ -231,6 +267,10 @@ This configuration is heavily inspired by and based on ThePrimeagen's Neovim set
 - [Mason.nvim](https://github.com/williamboman/mason.nvim) - LSP installer
 - [Telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) - Fuzzy finder
 - [Harpoon](https://github.com/ThePrimeagen/harpoon) - ThePrimeagen's file navigation masterpiece
+- [CodeCompanion.nvim](https://github.com/olimorris/codecompanion.nvim) - AI-powered coding assistant
+- [Which-Key.nvim](https://github.com/folke/which-key.nvim) - Keybind discovery
+- [Todo-Comments.nvim](https://github.com/folke/todo-comments.nvim) - Highlight and search TODOs
+- [Oh My Zsh](https://ohmyz.sh/) - Zsh framework
 
 
 ---

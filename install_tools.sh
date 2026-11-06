@@ -4,6 +4,8 @@
 # Safe to run again, and again after pulling this repo.
 #
 #   ~/.local/opt/nvim-v<version>           Neovim
+#   ~/.local/opt/node-v<version>           Node, which mason's npm packages need
+#   ~/.local/opt/deb-<package>             unzip, ripgrep and fd, if not installed
 #   ~/.local/share/beam/otp-<version>      Erlang
 #   ~/.local/share/beam/elixir-<version>   Elixir, including its source
 #   ~/.local/bin                           links to all of them
@@ -16,6 +18,7 @@ set -euo pipefail
 
 NVIM_VERSION=0.12.6
 TREE_SITTER_VERSION=0.27.1
+NODE_VERSION=24.22.2
 OTP_VERSION=28.5.0.8
 ELIXIR_VERSION=1.20.4
 OTP_MAJOR=${OTP_VERSION%%.*}
@@ -30,8 +33,8 @@ fi
 
 arch=$(dpkg --print-architecture)
 case "$arch" in
-  amd64) nvim_arch=x86_64; tree_sitter_arch=x64 ;;
-  arm64) nvim_arch=arm64; tree_sitter_arch=arm64 ;;
+  amd64) nvim_arch=x86_64; tree_sitter_arch=x64; node_arch=x64 ;;
+  arm64) nvim_arch=arm64; tree_sitter_arch=arm64; node_arch=arm64 ;;
   *) echo "install_tools: no builds for $arch" >&2; exit 1 ;;
 esac
 
@@ -40,11 +43,33 @@ bin="$HOME/.local/bin"
 opt="$HOME/.local/opt"
 beam="$HOME/.local/share/beam"
 mkdir -p "$bin" "$opt" "$beam" "$HOME/.config"
+export PATH="$bin:$PATH"
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 fetch() { curl -fsSL --limit-rate 10M -o "$2" "$1"; }
+
+# Unpacks a package from the Ubuntu archive for this user, if its tool is missing.
+# Downloading and unpacking a .deb needs no sudo.
+deb_tool() {
+  local package=$1 tool=$2 link=$3
+  command -v "$link" >/dev/null && return 0
+  (cd "$tmp" && apt-get download "$package" >/dev/null)
+  rm -rf "$opt/deb-$package"
+  dpkg -x "$tmp"/"$package"_*.deb "$opt/deb-$package"
+  ln -sfn "$opt/deb-$package/usr/bin/$tool" "$bin/$link"
+}
+deb_tool unzip unzip unzip
+deb_tool ripgrep rg rg
+deb_tool fd-find fdfind fd
+
+node_dir="$opt/node-v$NODE_VERSION-linux-$node_arch"
+if [ ! -x "$node_dir/bin/node" ]; then
+  fetch "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-$node_arch.tar.gz" "$tmp/node.tar.gz"
+  tar xzf "$tmp/node.tar.gz" -C "$opt"
+fi
+for tool in node npm npx; do ln -sfn "$node_dir/bin/$tool" "$bin/$tool"; done
 
 # Link the config before anything starts Neovim. A real folder may hold someone's
 # work, so stop rather than replace it. A symlink only points at a clone, which stays.
@@ -92,7 +117,6 @@ fi
 for tool in elixir elixirc iex mix; do ln -sfn "$elixir/bin/$tool" "$bin/$tool"; done
 for tool in erl erlc escript; do ln -sfn "$otp/bin/$tool" "$bin/$tool"; done
 
-export PATH="$bin:$PATH"
 mix local.hex --force --if-missing >/dev/null
 mix local.rebar --force --if-missing >/dev/null
 
@@ -113,14 +137,27 @@ if [ -n "$missing" ]; then
 fi
 
 # mason's elixir-ls compiles the real server on first start. Do it now, not on first jump.
-echo "" | MIX_ENV=prod elixir "$HOME/.local/share/nvim/mason/packages/elixir-ls/quiet_install.exs" >/dev/null
+elixir_ls="$HOME/.local/share/nvim/mason/packages/elixir-ls/quiet_install.exs"
+if [ -f "$elixir_ls" ]; then
+  echo "" | MIX_ENV=prod elixir "$elixir_ls" >/dev/null
+fi
 
 echo
 echo "install_tools: done"
 nvim --version | head -1
 tree-sitter --version
+node --version
 elixir --version | tail -1
 echo "treesitter parsers: $(ls "$HOME/.local/share/nvim/site/parser" 2>/dev/null | wc -l)"
+failed=""
+for package in $MASON_PACKAGES; do
+  [ -d "$HOME/.local/share/nvim/mason/packages/$package" ] || failed="$failed $package"
+done
+if [ -n "$failed" ]; then
+  echo "WARNING: language servers not installed:$failed. Fix the error above and run this again."
+else
+  echo "language servers: all installed"
+fi
 command -v cc >/dev/null || echo "WARNING: no C compiler (cc), so treesitter can't build parsers. Install build-essential."
 if ! bash -lc 'command -v nvim' >/dev/null 2>&1; then
   echo "WARNING: ~/.local/bin isn't on PATH in a login shell. Add it to your shell's profile."

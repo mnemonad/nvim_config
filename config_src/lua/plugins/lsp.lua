@@ -32,21 +32,31 @@ return {
         })
 
         require("mason").setup()
+
+        -- mason-lspconfig removed its handlers option: servers take their config from here.
+        vim.lsp.config("*", { capabilities = capabilities })
+
         require("mason-lspconfig").setup({
             ensure_installed = {
                 "lua_ls",
                 "rust_analyzer",
                 "pyright",
+                "bashls",
+                "yamlls",
+                "marksman",
+                "buf_ls",
+                "elixirls",
             },
-            handlers = {
-                function(server_name)
-                    require("lspconfig")[server_name].setup {
-                        on_attach = function(client, bufnr)
-                        end,
-                        capabilities = capabilities,
-                    }
-                end,
-            }
+        })
+
+        -- Needs Elixir on PATH: mason's elixir-ls is a launcher that compiles the server on first start.
+        vim.lsp.config("elixirls", {
+            settings = {
+                elixirLS = {
+                    dialyzerEnabled = false,
+                    fetchDeps = false,
+                },
+            },
         })
     end,
 }

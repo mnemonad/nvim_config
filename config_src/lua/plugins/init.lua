@@ -7,7 +7,12 @@ return {
 		"EdenEast/nightfox.nvim",
 		name = "nightfox",
 		config = function()
-			vim.cmd("colorscheme nightfox")
+			-- Use TTY-compatible colorscheme when in Linux console
+			if os.getenv("TERM") == "linux" then
+				vim.cmd("colorscheme slate")
+			else
+				vim.cmd("colorscheme nightfox")
+			end
 		end,
 	},
 

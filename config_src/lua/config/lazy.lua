@@ -30,4 +30,6 @@ require("lazy").setup({
   },
   -- automatically check for plugin updates
   checker = { enabled = true },
+  -- no plugin here needs luarocks; skip it (hererocks can't build without libreadline-dev)
+  rocks = { enabled = false },
 })

@@ -1,34 +1,28 @@
+-- The main branch, which Neovim 0.12 needs (master stops at 0.11). It needs the
+-- tree-sitter CLI and a C compiler; install_tools.sh checks for both.
+vim.g.treesitter_parsers = { "c", "lua", "rust", "python", "svelte", "html", "javascript", "css",
+    "bash", "yaml", "markdown", "markdown_inline", "elixir", "heex", "eex", "proto" }
+
 return {
     "nvim-treesitter/nvim-treesitter",
-
+    branch = "main",
+    lazy = false,
     build = ":TSUpdate",
 
     config = function()
-        require'nvim-treesitter.configs'.setup {
-            -- A list of parser names, or "all" (the listed parsers MUST always be installed)
-            ensure_installed = { "c", "lua", "rust", "python", "svelte", "html", "javascript", "css" },
+        -- A no-op for parsers already installed.
+        require("nvim-treesitter").install(vim.g.treesitter_parsers)
 
-            -- Install parsers synchronously (only applied to ensure_installed)
-            sync_install = false,
-
-            -- Automatically install missing parsers when entering buffer
-            -- Recommendation: set to false if you don't have tree-sitter CLI installed locally
-            auto_install = true,
-
-            -- List of parsers to ignore installing (or "all")
-
-            ---- If you need to change the installation directory of the parsers (see -> Advanced Setup)
-            -- parser_install_dir = "/some/path/to/store/parsers", -- Remember to run vim.opt.runtimepath:append("/some/path/to/store/parsers")!
-
-            highlight = {
-                enable = true,
-
-                -- Setting this to true will run :h syntax and tree-sitter at the same time.
-                -- Set this to true if you depend on 'syntax' being enabled (like for indentation).
-                -- Using this option may slow down your editor, and you may see some duplicate highlights.
-                -- Instead of true it can also be a list of languages
-                additional_vim_regex_highlighting = false,
-            },
-        }
+        -- main doesn't start highlighting by itself. get_lang() lacks a mapping for
+        -- some filetypes (rust, for one), so fall back to the filetype's own name.
+        vim.api.nvim_create_autocmd("FileType", {
+            callback = function(ev)
+                local filetype = vim.bo[ev.buf].filetype
+                local lang = vim.treesitter.language.get_lang(filetype) or filetype
+                if lang ~= "" and pcall(vim.treesitter.language.add, lang) then
+                    pcall(vim.treesitter.start, ev.buf, lang)
+                end
+            end,
+        })
     end,
-    }
+}

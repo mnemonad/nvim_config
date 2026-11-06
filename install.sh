@@ -60,7 +60,8 @@ install_packages() {
                 PACKAGES="$PACKAGES lua5.3 lua5.3-dev luarocks"
             fi
             
-            $SUDO apt-get install -y $PACKAGES
+            IFS=' ' read -ra PKG_ARRAY <<< "$PACKAGES"
+            $SUDO apt-get install -y "${PKG_ARRAY[@]}"
             
             install_neovim_debian_ubuntu
             ;;
@@ -361,6 +362,7 @@ main() {
     setup_zsh_config
     setup_aliases
     install_additional_tools
+    "$(pwd)/install_tools.sh"
     health_check
     
     log_success "Installation complete! 🎉"

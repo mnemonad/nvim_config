@@ -70,6 +70,17 @@ git clone https://github.com/mnemonad/nvim_config.git; cd nvim_config; .\install
 
 3. **Restart your terminal** and run `vim` or `nvim`
 
+### Editor only, on Ubuntu
+
+`install.sh` also installs packages with sudo and replaces `.zshrc`. For just the editor, with no sudo:
+
+```bash
+git clone https://github.com/mnemonad/nvim_config.git ~/.config/nvim_config
+~/.config/nvim_config/install_tools.sh
+```
+
+It installs Neovim 0.12.6, the tree-sitter CLI, Erlang and Elixir under `~/.local`, links `~/.config/nvim`, then installs the plugins at the commits in `lazy-lock.json`, the parsers and the language servers. Run it again after pulling. Treesitter builds its parsers with a C compiler, so it needs `build-essential`.
+
 ## 📋 System Requirements
 
 ### Minimum Requirements

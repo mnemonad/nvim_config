@@ -18,7 +18,10 @@ vim.opt.undofile = true
 vim.opt.hlsearch = false
 vim.opt.incsearch = true
 
-vim.opt.termguicolors = true
+-- Only enable termguicolors if not in TTY (TTY has limited color support)
+if os.getenv("TERM") ~= "linux" then
+    vim.opt.termguicolors = true
+end
 
 vim.opt.scrolloff = 8
 vim.opt.signcolumn = "yes"

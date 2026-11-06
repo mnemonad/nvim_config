@@ -120,11 +120,24 @@ for tool in erl erlc escript; do ln -sfn "$otp/bin/$tool" "$bin/$tool"; done
 mix local.hex --force --if-missing >/dev/null
 mix local.rebar --force --if-missing >/dev/null
 
-# Plugins at the commits in lazy-lock.json.
-nvim --headless "+Lazy! install" "+Lazy! restore" +qa
+# Plugins at the commits in lazy-lock.json, the committed one. Starting Neovim clones
+# any that are missing, but lazy.nvim then rewrites the lockfile with whatever is checked
+# out, including older plugins already here. So put the committed lockfile back before
+# restoring. To change a pin, update on one machine and commit the lockfile first:
+# running this discards uncommitted changes to it.
+lock=config_src/lazy-lock.json
+nvim --headless +qa
+git -C "$repo" checkout -- "$lock"
+nvim --headless "+Lazy! restore" +qa
+pins="plugin pins: all match lazy-lock.json"
+if ! git -C "$repo" diff --quiet -- "$lock"; then
+  pins="WARNING: plugins not at their pins, lines lazy.nvim changed: $(git -C "$repo" diff --unified=0 -- "$lock" | grep -c '^+ ')"
+  git -C "$repo" checkout -- "$lock"
+fi
 
-# Parsers, which treesitter otherwise installs in the background on first start.
-nvim --headless -c "lua require('nvim-treesitter').install(vim.g.treesitter_parsers):wait(300000)" -c qa
+# Parsers, which treesitter otherwise installs in the background on first start,
+# and updates, because each plugin commit expects its own parser versions.
+nvim --headless -c "lua require('nvim-treesitter').install(vim.g.treesitter_parsers):wait(300000)" -c "lua require('nvim-treesitter').update():wait(300000)" -c qa
 
 # Language servers. Mason skips ensure_installed in a headless Neovim.
 missing=""
@@ -149,6 +162,7 @@ tree-sitter --version
 node --version
 elixir --version | tail -1
 echo "treesitter parsers: $(ls "$HOME/.local/share/nvim/site/parser" 2>/dev/null | wc -l)"
+echo "$pins"
 failed=""
 for package in $MASON_PACKAGES; do
   [ -d "$HOME/.local/share/nvim/mason/packages/$package" ] || failed="$failed $package"
